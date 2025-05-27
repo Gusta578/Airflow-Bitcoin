@@ -1,0 +1,49 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: GaNUspA3
+      MYSQL_DATABASE: airflow
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  airflow-webserver:
+    image: apache/airflow:2.8.1
+    container_name: airflow_webserver
+    depends_on:
+      - db
+    environment:
+      PYTHONPATH: /opt/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: mysql+mysqldb://root:GaNUspA3@db:3306/airflow
+      AIRFLOW__CORE__FERNET_KEY: 'CQJLWUElpEPvM7sTR2AWqIKnQUl-hGmjUk8Uef-lyeA='
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+      AIRFLOW__WEBSERVER__SECRET_KEY: 'a_random_secret_key_here'
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./:/opt/airflow
+    command: webserver
+
+  airflow-scheduler:
+    image: apache/airflow:2.8.1
+    container_name: airflow_scheduler
+    depends_on:
+      - db
+    environment:
+      PYTHONPATH: /opt/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: mysql+mysqldb://root:GaNUspA3@db:3306/airflow
+      AIRFLOW__CORE__FERNET_KEY: 'CQJLWUElpEPvM7sTR2AWqIKnQUl-hGmjUk8Uef-lyeA='
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+      AIRFLOW__WEBSERVER__SECRET_KEY: 'a_random_secret_key_here'
+    volumes:
+      - ./:/opt/airflow
+    command: scheduler
+
+volumes:
+  db_data:
